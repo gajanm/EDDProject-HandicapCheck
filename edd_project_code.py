@@ -1,12 +1,7 @@
 
-
-#git clone https://github.com/gajanm/EDDProject-HandicapCheck.git
-
 #git clone https://github.com/abewley/sort
 
 #pip install -r EDDProject-HandicapCheck/requirements.txt
-
-#pip install roboflow supervision opencv-python
 
 #sed -i 's/TkAgg/Agg/' sort/sort.py
 
@@ -18,7 +13,6 @@ import os
 import pandas as pd
 from roboflow import Roboflow
 import supervision as sv
-
 import string
 import easyocr
 import re
@@ -279,6 +273,4 @@ while ret:
                                                                         'text_score': license_plate_text_score}}
 
 print(results)
-
-# write results
 write_csv(results, '/content/drive/MyDrive/EDD_Project/test2.csv')
