@@ -1,9 +1,5 @@
-
-#git clone https://github.com/abewley/sort
-
-#pip install -r EDDProject-HandicapCheck/requirements.txt
-
-#sed -i 's/TkAgg/Agg/' sort/sort.py
+git clone https://github.com/abewley/sort
+sed -i 's/TkAgg/Agg/' sort/sort.py
 
 import ast
 import cv2
@@ -16,6 +12,10 @@ import supervision as sv
 import string
 import easyocr
 import re
+os.environ['TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD'] = '1'
+from ultralytics import YOLO
+import cv2
+from sort.sort import *
 
 # Initialize the OCR reader
 reader = easyocr.Reader(['en'], gpu=False)
@@ -183,12 +183,6 @@ def get_car(license_plate, vehicle_track_ids):
 
 
 
-os.environ['TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD'] = '1'
-
-from ultralytics import YOLO
-import cv2
-
-from sort.sort import *
 
 results = {}
 
