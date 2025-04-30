@@ -1,1 +1,2 @@
-EDD Project - Jason Wong, Raymond Jiang, and Gajan Mohan Raj
+# Code for Engineering Design Development Project: Handicap Parking Monitor
+## Authors: Gajan Mohan Raj, Raymond Jiang, and Jason Wong
