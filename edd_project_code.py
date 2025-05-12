@@ -264,6 +264,11 @@ while ret:
                                                                         'text': license_plate_text,
                                                                         'bbox_score': score,
                                                                         'text_score': license_plate_text_score}}
+        
 
-print(results)
+                
+
+most_frequent_plate = results['license_number'].value_counts().idxmax()
+print("Most frequent license plate:", most_frequent_plate)
+
 write_csv(results, '/content/drive/MyDrive/EDD_Project/test2.csv')
