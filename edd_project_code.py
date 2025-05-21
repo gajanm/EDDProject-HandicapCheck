@@ -228,6 +228,7 @@ while int(time.time() - start_time) < capture_duration:
     if ret:
         frame = cv2.flip(frame, 0)
         out.write(frame)
+        cv2.imshow('frame', frame)
     else:
         break
 
