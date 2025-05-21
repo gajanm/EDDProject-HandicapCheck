@@ -231,7 +231,7 @@ while int(time.time() - start_time) < capture_duration:
 cap.release()
 out.release()
 
-cap = cv2.videoCapture("testing_vids/output.mp4")
+cap = cv2.VideoCapture("testing_vids/output.mp4")
 
 vehicles = [2, 3, 5, 7]
 
