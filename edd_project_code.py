@@ -215,7 +215,7 @@ cap.set(3, 1080)
 cap.set(4, 1080)
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # or *'avc1'
-out = cv2.VideoWriter('testing_vids/output.mp4', fourcc, 20.0, (1080, 1080))
+out = cv2.VideoWriter('testing_vids/output.mp4', -1, 20.0, (1080, 1080))
 
 capture_duration = 10
 
