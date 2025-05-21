@@ -246,6 +246,7 @@ plate_cache = {}
 while ret:
     frame_nmr += 1
     ret, frame = cap.read()
+    print("Frame number:", frame_nmr)
     margin = 50
     if not ret:
         break
@@ -303,4 +304,4 @@ if not handicap_found:
         }
 
 
-write_csv(results, f'/content/drive/MyDrive/EDD_Project/testnew.csv')
+write_csv(results, 'csvs/testnew.csv')
