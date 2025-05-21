@@ -1,10 +1,22 @@
-git clone https://github.com/abewley/sort
-sed -i 's/TkAgg/Agg/' sort/sort.py
+import os
+import subprocess
+
+if not os.path.exists("sort"):
+    subprocess.run(["git", "clone", "https://github.com/abewley/sort"], check=True)
+
+sort_file = "sort/sort.py"
+with open(sort_file, "r") as file:
+    content = file.read()
+
+if "TkAgg" in content:
+    content = content.replace("TkAgg", "Agg")
+    with open(sort_file, "w") as file:
+        file.write(content)
+
 
 import ast
 import cv2
 import numpy as np
-import pandas as pd
 import os
 import pandas as pd
 from roboflow import Roboflow
@@ -14,11 +26,10 @@ import easyocr
 import re
 os.environ['TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD'] = '1'
 from ultralytics import YOLO
-import cv2
 from sort.sort import *
 
 # Initialize the OCR reader
-reader = easyocr.Reader(['en'], gpu=False)
+reader = easyocr.Reader(['en'], gpu=True)
 
 def write_csv(results, output_path):
     """
@@ -41,6 +52,7 @@ def write_csv(results, output_path):
                    'text' in results[frame_nmr][car_id]['license_plate'].keys():
                     f.write('{},{},{},{},{},{},{},{}\n'.format(frame_nmr,
                                                             car_id,
+                                                            True,#TODO
                                                             '[{} {} {} {}]'.format(
                                                                 results[frame_nmr][car_id]['car']['bbox'][0],
                                                                 results[frame_nmr][car_id]['car']['bbox'][1],
@@ -190,14 +202,14 @@ mot_tracker = Sort()
 
 # load models
 coco_model = YOLO('yolov8n.pt')
-license_plate_detector = YOLO('/content/drive/MyDrive/EDD_Project/license_plate_detector.pt')
+license_plate_detector = YOLO('license_plate_detector.pt')
 
 rf = Roboflow(api_key="6nor1stR1ivUYVOjcIvs")
 project = rf.workspace().project("handicap-placard-detection")
 handicap_detector = project.version(1).model
 
 # load video
-cap = cv2.VideoCapture('/content/drive/MyDrive/EDD_Project/new_vid.mp4')
+cap = cv2.VideoCapture('testing_vids/w_handicap_placard.mp4') #TODO
 
 vehicles = [2, 3, 5, 7]
 
@@ -254,6 +266,8 @@ while ret:
                     _, license_plate_crop_thresh = cv2.threshold(license_plate_crop_gray, 64, 255, cv2.THRESH_BINARY_INV)
 
 
+
+
                     # read license plate number
                     license_plate_text, license_plate_text_score = read_license_plate(license_plate_crop)
                     print(f"Read license plate: {license_plate_text}, Score: {license_plate_text_score}")
@@ -271,4 +285,6 @@ while ret:
 most_frequent_plate = results['license_number'].value_counts().idxmax()
 print("Most frequent license plate:", most_frequent_plate)
 
-write_csv(results, '/content/drive/MyDrive/EDD_Project/test2.csv')
+
+write_csv(results, 'csvs/test2.csv')
+
