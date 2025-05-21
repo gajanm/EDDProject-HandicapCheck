@@ -223,69 +223,67 @@ frame_width = 1080
 # read frames
 frame_nmr = -1
 ret = True
-    handicap_found = False
-    plate_cache = {}
+handicap_found = False
+plate_cache = {}
 
-    start_time = time.time()
-    while int(time.time() - start_time) < capture_duration:
-        frame_nmr += 1
-        ret, frame = cap.read()
-        margin = 50
-        if not ret:
-            break
+start_time = time.time()
+while int(time.time() - start_time) < capture_duration:
+    frame_nmr += 1
+    ret, frame = cap.read()
+    margin = 50
+    if not ret:
+        break
 
-        detections = coco_model(frame)[0]
-        detections_ = []
-        for detection in detections.boxes.data.tolist():
-            x1, y1, x2, y2, score, class_id = detection
-            if int(class_id) in vehicles:
-                detections_.append([x1, y1, x2, y2, score])
-        track_ids = mot_tracker.update(np.asarray(detections_)) if len(detections_) > 0 else np.empty((0, 5))
+    detections = coco_model(frame)[0]
+    detections_ = []
+    for detection in detections.boxes.data.tolist():
+        x1, y1, x2, y2, score, class_id = detection
+        if int(class_id) in vehicles:
+            detections_.append([x1, y1, x2, y2, score])
+    track_ids = mot_tracker.update(np.asarray(detections_)) if len(detections_) > 0 else np.empty((0, 5))
 
-        license_plates = license_plate_detector(frame)[0]
-        for lp in license_plates.boxes.data.tolist():
-            x1, y1, x2, y2, score, class_id = lp
-            xcar1, ycar1, xcar2, ycar2, car_id = get_car(lp, track_ids)
-            if car_id != -1:
-                license_plate_crop = frame[int(y1):int(y2), int(x1): int(x2)]
-                license_plate_crop_gray = cv2.cvtColor(license_plate_crop, cv2.COLOR_BGR2GRAY)
-                _, license_plate_crop_thresh = cv2.threshold(license_plate_crop_gray, 64, 255, cv2.THRESH_BINARY_INV)
-                license_plate_text, license_plate_text_score = read_license_plate(license_plate_crop)
+    license_plates = license_plate_detector(frame)[0]
+    for lp in license_plates.boxes.data.tolist():
+        x1, y1, x2, y2, score, class_id = lp
+        xcar1, ycar1, xcar2, ycar2, car_id = get_car(lp, track_ids)
+        if car_id != -1:
+            license_plate_crop = frame[int(y1):int(y2), int(x1): int(x2)]
+            license_plate_crop_gray = cv2.cvtColor(license_plate_crop, cv2.COLOR_BGR2GRAY)
+            _, license_plate_crop_thresh = cv2.threshold(license_plate_crop_gray, 64, 255, cv2.THRESH_BINARY_INV)
+            license_plate_text, license_plate_text_score = read_license_plate(license_plate_crop)
 
-                if license_plate_text:
-                    plate_cache[car_id] = {
-                        'frame': frame_nmr,
-                        'license_plate': {
-                            'bbox': [x1, y1, x2, y2],
-                            'text': license_plate_text,
-                            'bbox_score': score,
-                            'text_score': license_plate_text_score
-                        },
-                        'car': {
-                            'bbox': [xcar1, ycar1, xcar2, ycar2]
-                        }
+            if license_plate_text:
+                plate_cache[car_id] = {
+                    'frame': frame_nmr,
+                    'license_plate': {
+                        'bbox': [x1, y1, x2, y2],
+                        'text': license_plate_text,
+                        'bbox_score': score,
+                        'text_score': license_plate_text_score
+                    },
+                    'car': {
+                        'bbox': [xcar1, ycar1, xcar2, ycar2]
                     }
+                }
 
 
-        handicap_result = handicap_detector.predict(frame).json()
-        handicap_detections = sv.Detections.from_inference(handicap_result)
-        if handicap_detections.xyxy.any():
-            x1, y1, x2, y2 = handicap_detections.xyxy[0]
-            if all([x1 > 50, x2 < frame_width - margin, y1 > 50, y2 < frame_height - margin]):
-                handicap_found = True
+    handicap_result = handicap_detector.predict(frame).json()
+    handicap_detections = sv.Detections.from_inference(handicap_result)
+    if handicap_detections.xyxy.any():
+        x1, y1, x2, y2 = handicap_detections.xyxy[0]
+        if all([x1 > 50, x2 < frame_width - margin, y1 > 50, y2 < frame_height - margin]):
+            handicap_found = True
 
-    results = {}
-    if not handicap_found:
-        for car_id, data in plate_cache.items():
-            frame = data['frame']
-            if frame not in results:
-                results[frame] = {}
-            results[frame][car_id] = {
-                'car': data['car'],
-                'license_plate': data['license_plate']
-            }
-
-
+results = {}
+if not handicap_found:
+    for car_id, data in plate_cache.items():
+        frame = data['frame']
+        if frame not in results:
+            results[frame] = {}
+        results[frame][car_id] = {
+            'car': data['car'],
+            'license_plate': data['license_plate']
+        }
 
 write_csv(results, 'csvs/test2.csv')
 
