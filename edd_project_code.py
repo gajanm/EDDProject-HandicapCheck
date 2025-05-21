@@ -214,7 +214,24 @@ cap = cv2.VideoCapture(0) #TODO
 cap.set(3, 1080)
 cap.set(4, 1080)
 
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # or *'avc1'
+out = cv2.VideoWriter('output.mp4', fourcc, 20.0, (1080, 1080))
+
 capture_duration = 10
+
+start_time = time.time()
+while int(time.time() - start_time) < capture_duration:
+    ret, frame = cap.read()
+    if ret:
+        frame = cv2.flip(frame, 0)
+        out.write(frame)
+    else:
+        break
+
+cap.release()
+out.release()
+
+cap = cv2.videoCapture("testing_vids/output.mp4")
 
 vehicles = [2, 3, 5, 7]
 
@@ -226,8 +243,7 @@ ret = True
 handicap_found = False
 plate_cache = {}
 
-start_time = time.time()
-while int(time.time() - start_time) < capture_duration:
+while ret:
     frame_nmr += 1
     ret, frame = cap.read()
     margin = 50
@@ -272,6 +288,7 @@ while int(time.time() - start_time) < capture_duration:
     if handicap_detections.xyxy.any():
         x1, y1, x2, y2 = handicap_detections.xyxy[0]
         if all([x1 > 50, x2 < frame_width - margin, y1 > 50, y2 < frame_height - margin]):
+            print(f'Handicap placard detected at Frame {frame_nmr}')
             handicap_found = True
 
 results = {}
@@ -285,5 +302,5 @@ if not handicap_found:
             'license_plate': data['license_plate']
         }
 
-write_csv(results, 'csvs/test2.csv')
 
+write_csv(results, f'/content/drive/MyDrive/EDD_Project/{video}.csv')
