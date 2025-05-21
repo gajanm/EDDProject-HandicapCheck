@@ -210,15 +210,15 @@ project = rf.workspace().project("handicap-placard-detection")
 handicap_detector = project.version(1).model
 
 # load video
-cap = cv.VideoCapture(0)
+cap = cv2.VideoCapture(0)
 cap.set(3, 1080)
 cap.set(4, 1080)
 
-actual_w = int(cap.get(cv.CAP_PROP_FRAME_WIDTH))
-actual_h = int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))
+actual_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+actual_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-fourcc = cv.VideoWriter_fourcc(*'MP4V')
-out = cv.VideoWriter('testing_vids/output.mp4', fourcc, 20.0, (actual_w, actual_h))
+fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+out = cv2.VideoWriter('testing_vids/output.mp4', fourcc, 20.0, (actual_w, actual_h))
 cap.release()
 out.release()
 
@@ -230,11 +230,11 @@ while frame_count < max_frames:
     if not ret:
         print("Can't get frame")
         break
-    frame = cv.flip(frame, 0)
+    frame = cv2.flip(frame, 0)
     out.write(frame)
-    cv.imshow('frame', frame)
+    cv2.imshow('frame', frame)
 
-    if cv.waitKey(1) == ord('q'):
+    if cv2.waitKey(1) == ord('q'):
         break
 
     frame_count += 1
