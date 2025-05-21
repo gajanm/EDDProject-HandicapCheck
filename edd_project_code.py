@@ -213,77 +213,72 @@ cap = cv2.VideoCapture('testing_vids/w_handicap_placard.mp4') #TODO
 
 vehicles = [2, 3, 5, 7]
 
-frame_height = 980
-frame_width = 884
+frame_height = 1080
+frame_width = 1080
 # read frames
 frame_nmr = -1
 ret = True
-while ret:
-    frame_nmr += 1
-    ret, frame = cap.read()
-    margin = 50
-    if ret:
-        results[frame_nmr] = {}
+    handicap_found = False
+    plate_cache = {}
+
+    while ret:
+        frame_nmr += 1
+        ret, frame = cap.read()
+        margin = 50
+        if not ret:
+            break
+
+        detections = coco_model(frame)[0]
+        detections_ = []
+        for detection in detections.boxes.data.tolist():
+            x1, y1, x2, y2, score, class_id = detection
+            if int(class_id) in vehicles:
+                detections_.append([x1, y1, x2, y2, score])
+        track_ids = mot_tracker.update(np.asarray(detections_)) if len(detections_) > 0 else np.empty((0, 5))
+
+        license_plates = license_plate_detector(frame)[0]
+        for lp in license_plates.boxes.data.tolist():
+            x1, y1, x2, y2, score, class_id = lp
+            xcar1, ycar1, xcar2, ycar2, car_id = get_car(lp, track_ids)
+            if car_id != -1:
+                license_plate_crop = frame[int(y1):int(y2), int(x1): int(x2)]
+                license_plate_crop_gray = cv2.cvtColor(license_plate_crop, cv2.COLOR_BGR2GRAY)
+                _, license_plate_crop_thresh = cv2.threshold(license_plate_crop_gray, 64, 255, cv2.THRESH_BINARY_INV)
+                license_plate_text, license_plate_text_score = read_license_plate(license_plate_crop)
+
+                if license_plate_text:
+                    plate_cache[car_id] = {
+                        'frame': frame_nmr,
+                        'license_plate': {
+                            'bbox': [x1, y1, x2, y2],
+                            'text': license_plate_text,
+                            'bbox_score': score,
+                            'text_score': license_plate_text_score
+                        },
+                        'car': {
+                            'bbox': [xcar1, ycar1, xcar2, ycar2]
+                        }
+                    }
+
+
         handicap_result = handicap_detector.predict(frame).json()
         handicap_detections = sv.Detections.from_inference(handicap_result)
         if handicap_detections.xyxy.any():
-          x1, y1, x2, y2 = handicap_detections.xyxy[0]
-          if x1>50 and x1<frame_width-margin and y1>50 and y1<frame_height-margin and x2>50 and x2<frame_width-margin and y2>50 and y2<frame_height-margin:
-            print(f'Handicap detected at Frame {frame_nmr}')
-            detections = coco_model(frame)[0]
-            detections_ = []
-            for detection in detections.boxes.data.tolist():
-                x1, y1, x2, y2, score, class_id = detection
-                if int(class_id) in vehicles:
-                  detections_.append([x1, y1, x2, y2, score])
-            if len(detections_) > 0:
-                track_ids = mot_tracker.update(np.asarray(detections_))
-            else:
-                track_ids = np.empty((0, 5))
+            x1, y1, x2, y2 = handicap_detections.xyxy[0]
+            if all([x1 > 50, x2 < frame_width - margin, y1 > 50, y2 < frame_height - margin]):
+                handicap_found = True
 
+    results = {}
+    if not handicap_found:
+        for car_id, data in plate_cache.items():
+            frame = data['frame']
+            if frame not in results:
+                results[frame] = {}
+            results[frame][car_id] = {
+                'car': data['car'],
+                'license_plate': data['license_plate']
+            }
 
-
-            # detect license plates
-            license_plates = license_plate_detector(frame)[0]
-            print(f"Frame {frame_nmr} license plates: {license_plates.boxes.data.tolist()}")
-
-            for license_plate in license_plates.boxes.data.tolist():
-                x1, y1, x2, y2, score, class_id = license_plate
-
-                # assign license plate to car
-                xcar1, ycar1, xcar2, ycar2, car_id = get_car(license_plate, track_ids)
-                print(f"License plate matched to car ID: {car_id}")
-
-
-                if car_id != -1:
-
-                    # crop license plate
-                    license_plate_crop = frame[int(y1):int(y2), int(x1): int(x2), :]
-
-
-                    # process license plate
-                    license_plate_crop_gray = cv2.cvtColor(license_plate_crop, cv2.COLOR_BGR2GRAY)
-                    _, license_plate_crop_thresh = cv2.threshold(license_plate_crop_gray, 64, 255, cv2.THRESH_BINARY_INV)
-
-
-
-
-                    # read license plate number
-                    license_plate_text, license_plate_text_score = read_license_plate(license_plate_crop)
-                    print(f"Read license plate: {license_plate_text}, Score: {license_plate_text_score}")
-
-                    if license_plate_text is not None:
-                        results[frame_nmr][car_id] = {'car': {'bbox': [xcar1, ycar1, xcar2, ycar2]},
-                                                      'license_plate': {'bbox': [x1, y1, x2, y2],
-                                                                        'text': license_plate_text,
-                                                                        'bbox_score': score,
-                                                                        'text_score': license_plate_text_score}}
-        
-
-                
-
-most_frequent_plate = results['license_number'].value_counts().idxmax()
-print("Most frequent license plate:", most_frequent_plate)
 
 
 write_csv(results, 'csvs/test2.csv')
