@@ -24,6 +24,7 @@ import supervision as sv
 import string
 import easyocr
 import re
+import time
 os.environ['TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD'] = '1'
 from ultralytics import YOLO
 from sort.sort import *
@@ -209,7 +210,11 @@ project = rf.workspace().project("handicap-placard-detection")
 handicap_detector = project.version(1).model
 
 # load video
-cap = cv2.VideoCapture('testing_vids/w_handicap_placard.mp4') #TODO
+cap = cv2.VideoCapture(0) #TODO
+cap.set(3, 1080)
+cap.set(4, 1080)
+
+capture_duration = 10
 
 vehicles = [2, 3, 5, 7]
 
@@ -221,7 +226,8 @@ ret = True
     handicap_found = False
     plate_cache = {}
 
-    while ret:
+    start_time = time.time()
+    while int(time.time() - start_time) < capture_duration:
         frame_nmr += 1
         ret, frame = cap.read()
         margin = 50
