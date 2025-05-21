@@ -210,30 +210,34 @@ project = rf.workspace().project("handicap-placard-detection")
 handicap_detector = project.version(1).model
 
 # load video
-cap = cv2.VideoCapture(0) #TODO
+cap = cv.VideoCapture(0)
 cap.set(3, 1080)
 cap.set(4, 1080)
 
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # or *'avc1'
-out = cv2.VideoWriter('testing_vids/output.mp4', -1, 20.0, (1080, 1080))
+actual_w = int(cap.get(cv.CAP_PROP_FRAME_WIDTH))
+actual_h = int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))
 
-capture_duration = 10
-
-start_time = time.time()
-while int(time.time() - start_time) < capture_duration:
-    ret, frame = cap.read()
-    if not ret:
-        print("Can't receive frame (stream end?). Exiting ...")
-
-    if ret:
-        frame = cv2.flip(frame, 0)
-        out.write(frame)
-        cv2.imshow('frame', frame)
-    else:
-        break
-
+fourcc = cv.VideoWriter_fourcc(*'MP4V')
+out = cv.VideoWriter('testing_vids/output.mp4', fourcc, 20.0, (actual_w, actual_h))
 cap.release()
 out.release()
+
+frame_count = 0
+max_frames = 400
+
+while frame_count < max_frames:
+    ret, frame = cap.read()
+    if not ret:
+        print("Can't get frame")
+        break
+    frame = cv.flip(frame, 0)
+    out.write(frame)
+    cv.imshow('frame', frame)
+
+    if cv.waitKey(1) == ord('q'):
+        break
+
+    frame_count += 1
 
 cap = cv2.VideoCapture("testing_vids/output.mp4")
 
@@ -241,7 +245,6 @@ vehicles = [2, 3, 5, 7]
 
 frame_height = 1080
 frame_width = 1080
-# read frames
 frame_nmr = -1
 ret = True
 handicap_found = False
