@@ -303,4 +303,4 @@ if not handicap_found:
         }
 
 
-write_csv(results, f'/content/drive/MyDrive/EDD_Project/{video}.csv')
+write_csv(results, f'/content/drive/MyDrive/EDD_Project/testnew.csv')
