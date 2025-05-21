@@ -265,7 +265,8 @@ while ret:
                     license_plate_crop_gray = cv2.cvtColor(license_plate_crop, cv2.COLOR_BGR2GRAY)
                     _, license_plate_crop_thresh = cv2.threshold(license_plate_crop_gray, 64, 255, cv2.THRESH_BINARY_INV)
 
-                    cv2.imwrite(f'/frames/frame_{frame_nmr}_plate.png', license_plate_crop_thresh)
+
+
 
                     # read license plate number
                     license_plate_text, license_plate_text_score = read_license_plate(license_plate_crop)
@@ -277,6 +278,13 @@ while ret:
                                                                         'text': license_plate_text,
                                                                         'bbox_score': score,
                                                                         'text_score': license_plate_text_score}}
+        
 
-print(results)
+                
+
+most_frequent_plate = results['license_number'].value_counts().idxmax()
+print("Most frequent license plate:", most_frequent_plate)
+
+
 write_csv(results, 'csvs/test2.csv')
+
