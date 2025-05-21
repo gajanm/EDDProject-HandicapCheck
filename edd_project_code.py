@@ -219,8 +219,7 @@ actual_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 fourcc = cv2.VideoWriter_fourcc(*'MP4V')
 out = cv2.VideoWriter('testing_vids/output.mp4', fourcc, 20.0, (actual_w, actual_h))
-cap.release()
-out.release()
+
 
 frame_count = 0
 max_frames = 400
@@ -239,12 +238,17 @@ while frame_count < max_frames:
 
     frame_count += 1
 
+cap.release()
+out.release()
+cv2.destroyAllWindows()
+
+
 cap = cv2.VideoCapture("testing_vids/output.mp4")
 
 vehicles = [2, 3, 5, 7]
 
-frame_height = 1080
-frame_width = 1080
+frame_height = 1024
+frame_width = 1280
 frame_nmr = -1
 ret = True
 handicap_found = False
